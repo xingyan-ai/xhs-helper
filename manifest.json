@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "红薯助手",
+  "version": "1.0.0",
+  "description": "专为小红书用户设计的数据采集助手，支持笔记采集、博主信息采集和飞书同步",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "storage",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "*://www.xiaohongshu.com/*",
+    "*://xhslink.com/*",
+    "*://open.feishu.cn/*",
+    "*://api.coze.cn/*"
+  ],
+  "action": {
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    },
+    "default_title": "红薯助手"
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "content_scripts": [{
+    "matches": ["*://www.xiaohongshu.com/*", "*://xhslink.com/*"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  }
+}
+
