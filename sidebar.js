@@ -715,14 +715,136 @@ async function syncToFeishu(type) {
   try {
     showAlert('info', '正在同步', `正在将 ${selectedData.length} 条数据同步到飞书，请稍候...`);
     
-    // 这里应该调用真实的Coze API
-    // 暂时模拟成功
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 准备数据和配置
+    let workflowId = '';
+    let tableUrl = '';
+    let records = [];
     
-    showAlert('success', '同步成功', `已成功将 ${selectedData.length} 条数据同步到飞书`);
+    if (type === 'single') {
+      // 单篇笔记同步
+      workflowId = feishuConfig.singleNoteWorkflowId || '';
+      tableUrl = feishuConfig.knowledgeUrl;
+      
+      records = selectedData.map(note => ({
+        fields: {
+          "标题": note.title || '',
+          "笔记链接": note.url || '',
+          "笔记类型": note.noteType || '图文',
+          "作者": note.author || '',
+          "正文": note.content || '',
+          "话题标签": note.tags || '',
+          "封面": note.coverImageUrl || '',
+          "图片附件": note.imageUrls || '',
+          "点赞数": note.likes || 0,
+          "收藏数": note.collects || 0,
+          "评论数": note.comments || 0,
+          "发布时间": note.publishDate || '',
+          "采集时间": new Date().toLocaleString('zh-CN')
+        }
+      }));
+      
+    } else if (type === 'batch') {
+      // 博主笔记批量同步
+      workflowId = feishuConfig.batchNotesWorkflowId || '';
+      tableUrl = feishuConfig.bloggerNoteUrl;
+      
+      records = selectedData.map(note => ({
+        fields: {
+          "博主": note.author || '',
+          "标题": note.title || '',
+          "点赞数": note.likes || 0,
+          "笔记链接": note.url || '',
+          "封面链接": note.image || '',
+          "笔记发布时间预估": note.publishDate || '',
+          "采集时间": new Date().toLocaleString('zh-CN')
+        }
+      }));
+      
+    } else if (type === 'blogger') {
+      // 博主信息同步
+      workflowId = feishuConfig.bloggerInfoWorkflowId || '';
+      tableUrl = feishuConfig.bloggerUrl;
+      
+      records = selectedData.map(info => ({
+        fields: {
+          "博主名称": info.bloggerName || '',
+          "头像": info.avatarUrl || '',
+          "小红书号": info.bloggerId || '',
+          "简介": info.description || '',
+          "粉丝数": info.followersCount || 0,
+          "主页链接": info.bloggerUrl || '',
+          "采集时间": new Date().toLocaleString('zh-CN')
+        }
+      }));
+    }
+    
+    // 检查工作流ID
+    if (!workflowId) {
+      showAlert('error', '配置缺失', '请在设置中配置工作流ID');
+      toggleSettings();
+      return;
+    }
+    
+    // 检查表格链接
+    if (!tableUrl) {
+      showAlert('error', '配置缺失', '请在设置中配置飞书表格链接');
+      toggleSettings();
+      return;
+    }
+    
+    // 构建请求体
+    const body = JSON.stringify({ records });
+    
+    // 调用 Coze API
+    const cozeToken = feishuConfig.cozeToken || '';
+    if (!cozeToken) {
+      showAlert('error', '配置缺失', '请在设置中配置 Coze Token');
+      toggleSettings();
+      return;
+    }
+    
+    const response = await fetch('https://api.coze.cn/v1/workflow/run', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cozeToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        workflow_id: workflowId,
+        parameters: {
+          orderId: feishuConfig.orderId,
+          baseToken: feishuConfig.baseToken,
+          tableUrl: tableUrl,
+          body: body
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('Coze API 响应:', result);
+    
+    // 解析结果
+    if (result.code === 0 && result.data) {
+      const data = JSON.parse(result.data);
+      
+      if (data.orderId_result === false) {
+        showAlert('error', '订单号无效', '订单号不存在或已过期，请联系管理员');
+      } else if (data.add_result === true) {
+        showAlert('success', '同步成功', `已成功将 ${selectedData.length} 条数据同步到飞书多维表格`);
+      } else {
+        showAlert('error', '同步失败', data.message || '数据写入失败，请检查飞书配置');
+      }
+    } else {
+      showAlert('error', '同步失败', result.msg || '未知错误');
+    }
+    
   } catch (error) {
     console.error('同步错误:', error);
-    showAlert('error', '同步失败', error.message);
+    showAlert('error', '同步失败', `网络请求失败: ${error.message}`);
   }
 }
 
@@ -734,9 +856,13 @@ function loadConfiguration() {
       // 填充到表单
       document.getElementById('orderId').value = feishuConfig.orderId || '';
       document.getElementById('baseToken').value = feishuConfig.baseToken || '';
+      document.getElementById('cozeToken').value = feishuConfig.cozeToken || '';
       document.getElementById('knowledgeUrl').value = feishuConfig.knowledgeUrl || '';
       document.getElementById('bloggerNoteUrl').value = feishuConfig.bloggerNoteUrl || '';
       document.getElementById('bloggerUrl').value = feishuConfig.bloggerUrl || '';
+      document.getElementById('singleNoteWorkflowId').value = feishuConfig.singleNoteWorkflowId || '';
+      document.getElementById('batchNotesWorkflowId').value = feishuConfig.batchNotesWorkflowId || '';
+      document.getElementById('bloggerInfoWorkflowId').value = feishuConfig.bloggerInfoWorkflowId || '';
     }
   });
 }
@@ -745,9 +871,13 @@ function saveConfiguration() {
   feishuConfig = {
     orderId: document.getElementById('orderId').value.trim(),
     baseToken: document.getElementById('baseToken').value.trim(),
+    cozeToken: document.getElementById('cozeToken').value.trim(),
     knowledgeUrl: document.getElementById('knowledgeUrl').value.trim(),
     bloggerNoteUrl: document.getElementById('bloggerNoteUrl').value.trim(),
-    bloggerUrl: document.getElementById('bloggerUrl').value.trim()
+    bloggerUrl: document.getElementById('bloggerUrl').value.trim(),
+    singleNoteWorkflowId: document.getElementById('singleNoteWorkflowId').value.trim(),
+    batchNotesWorkflowId: document.getElementById('batchNotesWorkflowId').value.trim(),
+    bloggerInfoWorkflowId: document.getElementById('bloggerInfoWorkflowId').value.trim()
   };
   
   chrome.storage.local.set({ feishuConfig }, () => {

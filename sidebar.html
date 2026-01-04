@@ -295,21 +295,49 @@
       </div>
       
       <div class="form-field">
-        <label class="form-label">「采集库」表格链接</label>
+        <label class="form-label">Coze API Token</label>
+        <input type="text" class="form-input" id="cozeToken" placeholder="请输入 Coze Token (sat_xxx...)">
+        <div class="help-text">在 Coze 平台的个人设置中创建 API Token</div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="form-field">
+        <label class="form-label">「笔记采集库」表格链接</label>
         <input type="text" class="form-input" id="knowledgeUrl" placeholder="请输入表格链接">
         <div class="help-text">用于存储单篇笔记的详细信息</div>
       </div>
       
       <div class="form-field">
-        <label class="form-label">「博主笔记」表格链接</label>
+        <label class="form-label">「小红书博主笔记概览」表格链接</label>
         <input type="text" class="form-input" id="bloggerNoteUrl" placeholder="请输入表格链接">
         <div class="help-text">用于存储博主笔记列表</div>
       </div>
       
       <div class="form-field">
-        <label class="form-label">「博主库」表格链接</label>
+        <label class="form-label">「小红书博主库」表格链接</label>
         <input type="text" class="form-input" id="bloggerUrl" placeholder="请输入表格链接">
         <div class="help-text">用于存储博主基础信息</div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="form-field">
+        <label class="form-label">单篇笔记工作流 ID</label>
+        <input type="text" class="form-input" id="singleNoteWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（单篇笔记同步）</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">博主笔记工作流 ID</label>
+        <input type="text" class="form-input" id="batchNotesWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（博主笔记批量同步）</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">博主信息工作流 ID</label>
+        <input type="text" class="form-input" id="bloggerInfoWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（博主信息同步）</div>
       </div>
       
       <button class="btn btn-primary btn-full" id="saveConfigBtn">
