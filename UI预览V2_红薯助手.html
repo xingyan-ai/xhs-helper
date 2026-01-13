@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>红薯助手 V2 - UI设计预览</title>
+  <style>
+    /* ===== CSS变量定义 ===== */
+    :root {
+      /* 主色 - 柔和的红薯橙 */
+      --primary-50:  #FFF8F0;
+      --primary-100: #FFEFD9;
+      --primary-500: #FF9F5A;
+      --primary-600: #F08A47;
+      --primary-700: #D97638;
+      
+      /* 辅助色 - 温暖绿 */
+      --secondary-500: #4CAF50;
+      --secondary-600: #43A047;
+      
+      /* 中性色 - 温暖灰 */
+      --neutral-0:   #FFFFFF;
+      --neutral-50:  #FAFAF9;
+      --neutral-100: #F5F5F4;
+      --neutral-200: #E7E5E4;
+      --neutral-300: #D6D3D1;
+      --neutral-400: #A8A29E;
+      --neutral-500: #78716C;
+      --neutral-600: #57534E;
+      --neutral-700: #44403C;
+      --neutral-800: #292524;
+      --neutral-900: #1C1917;
+      
+      /* 功能色 */
+      --success-50:  #F0FDF4;
+      --success-500: #22C55E;
+      --success-700: #15803D;
+      
+      --error-50:    #FEF2F2;
+      --error-500:   #EF4444;
+      --error-600:   #DC2626;
+      
+      --info-50:     #EFF6FF;
+      --info-500:    #3B82F6;
+      
+      /* 字体 */
+      --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                          "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", 
+                          "Microsoft YaHei", sans-serif;
+      
+      --text-xs:   11px;
+      --text-sm:   13px;
+      --text-base: 15px;
+      --text-md:   16px;
+      --text-lg:   18px;
+      --text-xl:   20px;
+      --text-2xl:  24px;
+      
+      /* 间距 */
+      --space-2:  8px;
+      --space-3:  12px;
+      --space-4:  16px;
+      --space-5:  20px;
+      --space-6:  24px;
+      --space-8:  32px;
+      
+      /* 圆角 - 更大的圆角 */
+      --radius-sm:  8px;
+      --radius-md:  12px;
+      --radius-lg:  16px;
+      --radius-xl:  20px;
+      --radius-2xl: 24px;
+      --radius-full: 9999px;
+      
+      /* 阴影 - 更柔和 */
+      --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.03);
+      --shadow-sm:  0 2px 4px rgba(0, 0, 0, 0.04);
+      --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.05);
+      --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.08);
+      
+      /* 动效 */
+      --duration-fast: 150ms;
+      --duration-base: 200ms;
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* ===== 全局样式 ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: var(--font-family-base);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      color: var(--neutral-700);
+      background: var(--neutral-50);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    
+    /* ===== 主容器 ===== */
+    .app-container {
+      width: 420px;
+      max-height: 90vh;
+      background: var(--neutral-0);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* ===== 顶部栏 ===== */
+    .app-header {
+      padding: 20px 24px;
+      background: var(--neutral-0);
+      border-bottom: 1px solid var(--neutral-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo {
+      font-size: 32px;
+      line-height: 1;
+    }
+    
+    .brand-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .brand-name {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      color: var(--neutral-900);
+      line-height: 1.2;
+    }
+    
+    .brand-subtitle {
+      font-size: var(--text-xs);
+      color: var(--neutral-500);
+      font-weight: 400;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--neutral-600);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all var(--duration-fast) var(--ease-in-out);
+    }
+    
+    .icon-button:hover {
+      background: var(--neutral-100);
+      color: var(--neutral-900);
+    }
+    
+    /* ===== 内容区域 ===== */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    
+    /* 美化滚动条 */
+    .app-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .app-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .app-content::-webkit-scrollbar-thumb {
+      background: var(--neutral-300);
+      border-radius: 3px;
+    }
+    
+    .app-content::-webkit-scrollbar-thumb:hover {
+      background: var(--neutral-400);
+    }
+    
+    /* ===== 状态提示 ===== */
+    .status-card {
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      border: 2px solid;
+    }
+    
+    .status-card.success {
+      background: var(--success-50);
+      color: var(--success-700);
+      border-color: var(--success-500);
+    }
+    
+    .status-card.info {
+      background: var(--info-50);
+      color: #1E40AF;
+      border-color: var(--info-500);
+    }
+    
+    .status-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+    
+    /* ===== 章节标题 ===== */
+    .section {
+      margin-bottom: 32px;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .section-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .section-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      color: var(--neutral-900);
+    }
+    
+    .section-subtitle {
+      font-size: var(--text-sm);
+      color: var(--neutral-500);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    
+    /* ===== 卡片容器 ===== */
+    .card {
+      background: var(--neutral-0);
+      border: 2px solid var(--neutral-200);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .card:hover {
+      border-color: var(--primary-500);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    
+    /* ===== 按钮 ===== */
+    .btn {
+      height: 44px;
+      padding: 0 24px;
+      border-radius: var(--radius-lg);
+      font-size: var(--text-base);
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-in-out);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    
+    .btn-primary {
+      background: var(--primary-500);
+      color: var(--neutral-0);
+      box-shadow: 0 2px 8px rgba(255, 159, 90, 0.2);
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-600);
+      box-shadow: 0 4px 12px rgba(255, 159, 90, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: var(--neutral-100);
+      color: var(--neutral-700);
+      border: 2px solid var(--neutral-200);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--neutral-50);
+      border-color: var(--neutral-300);
+    }
+    
+    .btn-full {
+      width: 100%;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    .button-group .btn {
+      flex: 1;
+      height: 40px;
+      font-size: var(--text-sm);
+    }
+    
+    /* ===== 笔记项 ===== */
+    .note-item {
+      background: var(--neutral-50);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      transition: all var(--duration-base) var(--ease-in-out);
+      border: 2px solid transparent;
+    }
+    
+    .note-item:hover {
+      background: var(--neutral-0);
+      border-color: var(--primary-500);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .note-cover {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--neutral-200), var(--neutral-300));
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .note-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: var(--primary-500);
+      color: var(--neutral-0);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+    
+    .note-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .note-title {
+      font-size: var(--text-md);
+      font-weight: 600;
+      color: var(--neutral-900);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .note-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: var(--text-sm);
+      color: var(--neutral-500);
+    }
+    
+    .note-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-xs);
+      color: var(--neutral-600);
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* ===== 表单输入 ===== */
+    .form-field {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--neutral-700);
+      margin-bottom: 8px;
+    }
+    
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 16px;
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--neutral-200);
+      background: var(--neutral-0);
+      font-size: var(--text-base);
+      color: var(--neutral-900);
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .form-input::placeholder {
+      color: var(--neutral-400);
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 4px rgba(255, 159, 90, 0.1);
+    }
+    
+    /* ===== 分割线 ===== */
+    .divider {
+      height: 1px;
+      background: var(--neutral-200);
+      margin: 24px 0;
+    }
+    
+    /* ===== 徽章 ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: 500;
+    }
+    
+    .badge-success {
+      background: var(--success-50);
+      color: var(--success-700);
+    }
+    
+    .badge-primary {
+      background: var(--primary-50);
+      color: var(--primary-700);
+    }
+    
+    /* ===== 特殊样式 ===== */
+    .help-text {
+      font-size: var(--text-sm);
+      color: var(--neutral-500);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--neutral-500);
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    
+    /* ===== 配置面板（隐藏/显示）===== */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 420px;
+      height: 100vh;
+      background: var(--neutral-0);
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+      transition: right 0.3s var(--ease-in-out);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .settings-panel.active {
+      right: 0;
+    }
+    
+    .settings-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--neutral-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .settings-title {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      color: var(--neutral-900);
+    }
+    
+    .settings-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    
+    /* 遮罩层 */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s var(--ease-in-out);
+      z-index: 99;
+    }
+    
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 主容器 -->
+  <div class="app-container">
+    
+    <!-- 顶部栏 -->
+    <div class="app-header">
+      <div class="header-brand">
+        <span class="logo">🍠</span>
+        <div class="brand-info">
+          <div class="brand-name">红薯助手</div>
+          <div class="brand-subtitle">Sweet Potato Helper</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-button" title="帮助">❓</button>
+        <button class="icon-button" onclick="toggleSettings()" title="设置">⚙️</button>
+      </div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="app-content">
+      
+      <!-- 状态提示 -->
+      <div class="status-card success">
+        <span class="status-icon">✓</span>
+        <span>成功采集到 23 条笔记</span>
+      </div>
+      
+      <!-- 单篇笔记采集 -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">📝</div>
+          <div class="section-title">单篇笔记采集</div>
+        </div>
+        <div class="section-subtitle">
+          打开小红书笔记详情页，一键采集笔记的完整信息，包括标题、正文、图片、互动数据等。
+        </div>
+        
+        <div class="card">
+          <button class="btn btn-primary btn-full">开始采集单篇笔记</button>
+          <div class="button-group">
+            <button class="btn btn-secondary">导出 Excel</button>
+            <button class="btn btn-secondary">同步飞书</button>
+          </div>
+        </div>
+        
+        <!-- 采集结果示例 -->
+        <div class="note-item">
+          <div class="note-cover">
+            <div class="note-badge">1</div>
+            📷
+          </div>
+          <div class="note-info">
+            <div class="note-title">超实用的小红书运营技巧分享！新手必看</div>
+            <div class="note-meta">
+              <span>运营小能手</span>
+              <span>•</span>
+              <span>2小时前</span>
+            </div>
+            <div class="note-stats">
+              <div class="stat-item">
+                <span>👍</span>
+                <span>1.2万</span>
+              </div>
+              <div class="stat-item">
+                <span>⭐</span>
+                <span>3200</span>
+              </div>
+              <div class="stat-item">
+                <span>💬</span>
+                <span>856</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <!-- 博主笔记批量采集 -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">📚</div>
+          <div class="section-title">博主笔记批量采集</div>
+        </div>
+        <div class="section-subtitle">
+          打开博主主页，自动滚动加载并采集该博主发布的所有笔记信息。
+        </div>
+        
+        <div class="card">
+          <button class="btn btn-primary btn-full">开始采集博主笔记</button>
+          <div class="button-group">
+            <button class="btn btn-secondary">清空列表</button>
+            <button class="btn btn-secondary">导出 Excel</button>
+            <button class="btn btn-secondary">同步飞书</button>
+          </div>
+        </div>
+        
+        <!-- 采集结果示例 -->
+        <div class="note-item">
+          <div class="note-cover">
+            <div class="note-badge">1</div>
+            📷
+          </div>
+          <div class="note-info">
+            <div class="note-title">2024年最火的5个小红书运营技巧</div>
+            <div class="note-meta">
+              <span>数字营销达人</span>
+              <span class="badge badge-primary">图文</span>
+            </div>
+            <div class="note-stats">
+              <div class="stat-item">
+                <span>👍</span>
+                <span>8500</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="note-item">
+          <div class="note-cover">
+            <div class="note-badge">2</div>
+            📷
+          </div>
+          <div class="note-info">
+            <div class="note-title">从0到1打造爆款笔记的完整流程</div>
+            <div class="note-meta">
+              <span>数字营销达人</span>
+              <span class="badge badge-success">视频</span>
+            </div>
+            <div class="note-stats">
+              <div class="stat-item">
+                <span>👍</span>
+                <span>6200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="note-item">
+          <div class="note-cover">
+            <div class="note-badge">3</div>
+            📷
+          </div>
+          <div class="note-info">
+            <div class="note-title">新手博主必备的10个工具推荐</div>
+            <div class="note-meta">
+              <span>数字营销达人</span>
+              <span class="badge badge-primary">图文</span>
+            </div>
+            <div class="note-stats">
+              <div class="stat-item">
+                <span>👍</span>
+                <span>4100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <!-- 博主信息采集 -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">👤</div>
+          <div class="section-title">博主信息采集</div>
+        </div>
+        <div class="section-subtitle">
+          快速获取博主的基础资料，包括名称、头像、简介、粉丝数等。
+        </div>
+        
+        <div class="card">
+          <button class="btn btn-primary btn-full">开始采集博主信息</button>
+          <div class="button-group">
+            <button class="btn btn-secondary">导出 Excel</button>
+            <button class="btn btn-secondary">同步飞书</button>
+          </div>
+        </div>
+        
+        <!-- 博主信息示例 -->
+        <div class="card" style="padding: 24px; margin-top: 16px;">
+          <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #FF9F5A, #4CAF50); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;">👤</div>
+            <div style="flex: 1;">
+              <div style="font-size: 20px; font-weight: 600; color: var(--neutral-900); margin-bottom: 6px;">数字营销达人</div>
+              <div style="font-size: 13px; color: var(--neutral-500);">小红书号: 123456789</div>
+            </div>
+          </div>
+          <div style="font-size: 15px; color: var(--neutral-700); line-height: 1.6; margin-bottom: 16px;">
+            专注小红书运营3年+ | 帮助1000+博主涨粉 | 分享干货不废话
+          </div>
+          <div style="display: flex; gap: 20px; padding-top: 16px; border-top: 1px solid var(--neutral-200);">
+            <div style="text-align: center;">
+              <div style="font-size: 20px; font-weight: 600; color: var(--neutral-900);">50k</div>
+              <div style="font-size: 13px; color: var(--neutral-500); margin-top: 4px;">粉丝</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 20px; font-weight: 600; color: var(--neutral-900);">258</div>
+              <div style="font-size: 13px; color: var(--neutral-500); margin-top: 4px;">笔记</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 20px; font-weight: 600; color: var(--neutral-900);">15.2w</div>
+              <div style="font-size: 13px; color: var(--neutral-500); margin-top: 4px;">获赞</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- 遮罩层 -->
+  <div class="overlay" onclick="toggleSettings()"></div>
+  
+  <!-- 设置面板 -->
+  <div class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ 飞书配置</div>
+      <button class="icon-button" onclick="toggleSettings()">✕</button>
+    </div>
+    <div class="settings-content">
+      
+      <div class="form-field">
+        <label class="form-label">订单号</label>
+        <input type="text" class="form-input" placeholder="请输入订单号">
+        <div class="help-text">用于验证用户权限和使用次数</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">多维表格授权码</label>
+        <input type="text" class="form-input" placeholder="请输入 basetoken">
+        <div class="help-text">在飞书多维表格中获取 Personal Access Token</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">「采集库」表格链接</label>
+        <input type="text" class="form-input" placeholder="请输入表格链接">
+        <div class="help-text">用于存储单篇笔记的详细信息</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">「博主笔记」表格链接</label>
+        <input type="text" class="form-input" placeholder="请输入表格链接">
+        <div class="help-text">用于存储博主笔记列表</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">「博主库」表格链接</label>
+        <input type="text" class="form-input" placeholder="请输入表格链接">
+        <div class="help-text">用于存储博主基础信息</div>
+      </div>
+      
+      <button class="btn btn-primary btn-full">保存配置</button>
+      
+      <div class="divider"></div>
+      
+      <div style="text-align: center; color: var(--neutral-500); font-size: var(--text-sm);">
+        <p>配置完成后即可使用飞书同步功能</p>
+        <p style="margin-top: 8px;">需要帮助？<a href="#" style="color: var(--primary-500); text-decoration: none;">查看配置教程</a></p>
+      </div>
+      
+    </div>
+  </div>
+  
+  <script>
+    // 切换设置面板
+    function toggleSettings() {
+      const panel = document.querySelector('.settings-panel');
+      const overlay = document.querySelector('.overlay');
+      panel.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+  </script>
+  
+</body>
+</html>
+
