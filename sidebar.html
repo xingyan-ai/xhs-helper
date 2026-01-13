@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>红薯助手</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- 顶部栏 -->
+    <div class="app-header">
+      <div class="header-brand">
+        <img src="images/icon128.png" alt="红薯助手" class="brand-icon-img">
+        <div class="brand-info">
+          <h1>红薯助手</h1>
+          <p>Sweet Potato Helper</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="helpBtn" title="帮助">
+          <span class="material-symbols-outlined">help</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="设置">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="app-content">
+      
+      <!-- 首页：功能卡片列表 -->
+      <div id="homePage" class="page-view">
+        
+        <!-- 功能卡片列表 -->
+        <div class="function-cards">
+          
+          <!-- 单篇笔记卡片 -->
+          <div class="function-card" data-function="single">
+            <div class="function-card-icon">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+            <div class="function-card-content">
+              <div class="function-card-title">单篇笔记采集</div>
+              <div class="function-card-desc">一键采集笔记的完整信息</div>
+            </div>
+            <div class="function-card-arrow">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+          </div>
+          
+          <!-- 博主笔记卡片 -->
+          <div class="function-card" data-function="batch">
+            <div class="function-card-icon">
+              <span class="material-symbols-outlined">library_books</span>
+            </div>
+            <div class="function-card-content">
+              <div class="function-card-title">博主笔记批量采集</div>
+              <div class="function-card-desc">自动采集博主所有笔记</div>
+            </div>
+            <div class="function-card-arrow">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+          </div>
+          
+          <!-- 博主信息卡片 -->
+          <div class="function-card" data-function="blogger">
+            <div class="function-card-icon">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="function-card-content">
+              <div class="function-card-title">博主信息采集</div>
+              <div class="function-card-desc">快速获取博主基础资料</div>
+            </div>
+            <div class="function-card-arrow">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- 功能页：单篇笔记 -->
+      <div id="singlePage" class="page-view hidden">
+        <div class="page-header">
+          <button class="btn-back" id="singleBackBtn">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h2 class="page-title">单篇笔记采集</h2>
+        </div>
+        <!-- 状态提示 -->
+        <div id="singleAlertContainer" class="alert-container"></div>
+        <div class="page-content">
+          <div class="function-desc">
+            打开小红书笔记详情页，一键采集笔记的完整信息，包括标题、正文、图片、互动数据等。
+            <br>
+            <span style="color: var(--primary-600); font-weight: 500;">⚠️ 需在笔记详情页使用</span>
+          </div>
+          <button class="btn btn-primary btn-full" id="singleCaptureBtn">
+            <span class="material-symbols-outlined">download</span>
+            <span>开始采集</span>
+          </button>
+          <!-- 采集结果区域 -->
+          <div id="singleResults" class="results-section hidden">
+            <div class="results-header">
+              <div class="results-title">
+                <span>采集结果</span>
+                <span class="results-count" id="singleCount">0</span>
+              </div>
+              <label class="select-all-checkbox">
+                <input type="checkbox" id="singleSelectAll" checked>
+                <span>全选</span>
+              </label>
+            </div>
+            <div class="results-actions compact">
+              <button class="btn-action" id="singleDeleteBtn" title="删除选中">
+                <span class="material-symbols-outlined">delete</span>
+                <span>删除</span>
+              </button>
+              <button class="btn-action" id="singleExportBtn" title="导出CSV">
+                <span class="material-symbols-outlined">file_download</span>
+                <span>导出</span>
+              </button>
+              <button class="btn-action" id="singleSyncBtn" title="同步飞书">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                <span>飞书</span>
+              </button>
+            </div>
+            <div id="singleNotesList"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 功能页：博主笔记 -->
+      <div id="batchPage" class="page-view hidden">
+        <div class="page-header">
+          <button class="btn-back" id="batchBackBtn">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h2 class="page-title">博主笔记批量采集</h2>
+        </div>
+        <!-- 状态提示 -->
+        <div id="batchAlertContainer" class="alert-container"></div>
+        <div class="page-content">
+          <div class="function-desc">
+            打开博主主页，自动滚动加载并采集该博主发布的所有笔记信息。
+            <br>
+            <span style="color: var(--primary-600); font-weight: 500;">⚠️ 需在博主主页使用</span>
+          </div>
+          
+          <!-- 日期筛选 -->
+          <div class="date-filter-section">
+            <div class="filter-header">
+              <div class="filter-title">
+                <span class="material-symbols-outlined">filter_alt</span>
+                <span>日期过滤</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="batchDateToggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="date-range" id="dateRangeContainer" style="display: none;">
+              <div class="date-field">
+                <label>从</label>
+                <input type="date" id="batchDateStart" class="date-input">
+              </div>
+              <div class="date-field">
+                <label>到</label>
+                <input type="date" id="batchDateEnd" class="date-input">
+              </div>
+            </div>
+            <div class="filter-off-hint" id="filterOffHint">
+              <span class="material-symbols-outlined">info</span>
+              <span>已关闭，将采集全部笔记</span>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" id="batchCaptureBtn">
+            <span class="material-symbols-outlined">download</span>
+            <span>开始采集</span>
+          </button>
+          <!-- 采集结果区域 -->
+          <div id="batchResults" class="results-section hidden">
+            <!-- 固定操作栏 -->
+            <div class="results-toolbar">
+              <div class="results-header">
+                <div class="results-title">
+                  <span>采集结果</span>
+                  <span class="results-count" id="batchCount">0</span>
+                </div>
+                <label class="select-all-checkbox">
+                  <input type="checkbox" id="batchSelectAll" checked>
+                  <span>全选</span>
+                </label>
+              </div>
+              <div class="results-actions compact">
+                <button class="btn-action" id="batchDeleteBtn" title="删除选中">
+                  <span class="material-symbols-outlined">delete</span>
+                  <span>删除</span>
+                </button>
+                <button class="btn-action" id="batchExportBtn" title="导出CSV">
+                  <span class="material-symbols-outlined">file_download</span>
+                  <span>导出</span>
+                </button>
+                <button class="btn-action" id="batchSyncBtn" title="同步飞书">
+                  <span class="material-symbols-outlined">cloud_upload</span>
+                  <span>飞书</span>
+                </button>
+              </div>
+            </div>
+            <!-- 笔记列表 -->
+            <div id="batchNotesList" class="notes-list"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 功能页：博主信息 -->
+      <div id="bloggerPage" class="page-view hidden">
+        <div class="page-header">
+          <button class="btn-back" id="bloggerBackBtn">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h2 class="page-title">博主信息采集</h2>
+        </div>
+        <!-- 状态提示 -->
+        <div id="bloggerAlertContainer" class="alert-container"></div>
+        <div class="page-content">
+          <div class="function-desc">
+            快速获取博主的基础资料，包括名称、头像、简介、小红书号、粉丝数等。
+            <br>
+            <span style="color: var(--primary-600); font-weight: 500;">⚠️ 需进入博主主页方可采集</span>
+          </div>
+          <button class="btn btn-primary btn-full" id="bloggerCaptureBtn">
+            <span class="material-symbols-outlined">download</span>
+            <span>开始采集</span>
+          </button>
+          <!-- 采集结果区域 -->
+          <div id="bloggerResults" class="results-section hidden">
+            <div class="results-header">
+              <div class="results-title">
+                <span>博主信息</span>
+              </div>
+            </div>
+            <div class="results-actions compact">
+              <button class="btn-action" id="bloggerDeleteBtn" title="删除">
+                <span class="material-symbols-outlined">delete</span>
+                <span>删除</span>
+              </button>
+              <button class="btn-action" id="bloggerExportBtn" title="导出CSV">
+                <span class="material-symbols-outlined">file_download</span>
+                <span>导出</span>
+              </button>
+              <button class="btn-action" id="bloggerSyncBtn" title="同步飞书">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                <span>飞书</span>
+              </button>
+            </div>
+            <div id="bloggerInfoCard"></div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- 设置面板 -->
+  <div class="overlay" id="overlay"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <div class="settings-title">
+        <span class="material-symbols-outlined">settings</span>
+        <span>飞书配置</span>
+      </div>
+      <button class="icon-btn" id="closeSettingsBtn">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="settings-content">
+      
+      <div class="form-field">
+        <label class="form-label">订单号</label>
+        <input type="text" class="form-input" id="orderId" placeholder="请输入订单号">
+        <div class="help-text">用于验证用户权限和使用次数</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">多维表格授权码</label>
+        <input type="text" class="form-input" id="baseToken" placeholder="请输入 basetoken">
+        <div class="help-text">在飞书多维表格中获取 Personal Access Token</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">Coze API Token</label>
+        <input type="text" class="form-input" id="cozeToken" placeholder="请输入 Coze Token (sat_xxx...)">
+        <div class="help-text">在 Coze 平台的个人设置中创建 API Token</div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="form-field">
+        <label class="form-label">「笔记采集库」表格链接</label>
+        <input type="text" class="form-input" id="knowledgeUrl" placeholder="请输入表格链接">
+        <div class="help-text">用于存储单篇笔记的详细信息</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">「小红书博主笔记概览」表格链接</label>
+        <input type="text" class="form-input" id="bloggerNoteUrl" placeholder="请输入表格链接">
+        <div class="help-text">用于存储博主笔记列表</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">「小红书博主库」表格链接</label>
+        <input type="text" class="form-input" id="bloggerUrl" placeholder="请输入表格链接">
+        <div class="help-text">用于存储博主基础信息</div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="form-field">
+        <label class="form-label">单篇笔记工作流 ID</label>
+        <input type="text" class="form-input" id="singleNoteWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（单篇笔记同步）</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">博主笔记工作流 ID</label>
+        <input type="text" class="form-input" id="batchNotesWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（博主笔记批量同步）</div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">博主信息工作流 ID</label>
+        <input type="text" class="form-input" id="bloggerInfoWorkflowId" placeholder="请输入工作流 ID">
+        <div class="help-text">Coze 工作流 ID（博主信息同步）</div>
+      </div>
+      
+      <button class="btn btn-primary btn-full" id="saveConfigBtn">
+        <span class="material-symbols-outlined">save</span>
+        <span>保存配置</span>
+      </button>
+      
+      <div class="divider"></div>
+      
+      <div style="text-align: center; color: var(--neutral-500); font-size: 12px; line-height: 1.6; padding: 0 8px;">
+        <p>配置完成后即可使用飞书同步功能</p>
+        <p style="margin-top: 8px;">需要帮助？<a href="#" style="color: var(--primary-500); text-decoration: none; white-space: nowrap;">查看配置教程</a></p>
+      </div>
+      
+    </div>
+  </div>
+  
+  <script src="sidebar.js"></script>
+  
+</body>
+</html>
+
