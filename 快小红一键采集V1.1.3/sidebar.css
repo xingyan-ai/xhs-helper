@@ -1,0 +1,448 @@
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 350px;
+  height: 100vh;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  background-color: #ebebeb;
+  color: #333333;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 头部样式 */
+.header {
+  text-align: center;
+
+}
+
+.brand {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 5px;
+}
+
+.support-link {
+  margin-bottom: 5px;
+}
+
+.support-link a {
+  color: #4087E5;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.author {
+  font-size: 12px;
+  color: #555555;
+  margin-bottom: 10px;
+  display: none;
+}
+
+/* 状态反馈框样式 - 优化版 */
+.status-text {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #000000;
+  background: #FFFFFF;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* 移除flex布局，让内容自然流动 */
+  white-space: normal;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+/* Tab切换容器样式 - 移除底部分割线 */
+.tab-container {
+  margin-bottom: 15px;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: -1px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #F2F2F2;
+}
+
+.tab-button {
+  padding: 15px 5px;
+  background: #FFFFFF;
+  color: #333333;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  flex: 1;
+  font-size: 14px;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: #F9F9F9;
+}
+
+.tab-button.active {
+  color: #FF2442;
+  background: #FFFFFF;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background-color: #FF2442;
+  border-radius: 3px 3px 0 0;
+}
+
+.tab-content {
+  width: 100%;
+}
+
+.tab-pane {
+  display: none;
+  padding: 20px 0;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* 捕获部分样式 */
+.capture-section {
+  text-align: center;
+}
+
+.capture-tip {
+  margin-bottom: 15px;
+  color: #7F7F7F;
+  font-size: 14px;
+}
+
+.capture-section button {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  background: #FF2442;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.capture-section button:hover {
+  background: #E01E3A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 36, 66, 0.2);
+}
+
+/* 结果按钮容器样式 - 居右对齐，更小尺寸 */
+.results-button-container {
+  margin: 15px 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.results-button-container button {
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #FFFFFF;
+  color: #FF2442;
+  border: 1px solid #FF2442;
+  border-radius: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.results-button-container button:hover:not(:disabled) {
+  background: #FFF0F3;
+  transform: translateY(-1px);
+}
+
+.results-button-container button:disabled {
+  background: #F5F5F5;
+  color: #CCCCCC;
+  border-color: #CCCCCC;
+  cursor: not-allowed;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333333;
+  font-size: 12px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 5px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+input[type="text"]::placeholder {
+  color: #999999;
+}
+
+/* 保存配置按钮样式 */
+#saveConfigBtn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: #FF2442;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+#saveConfigBtn:hover {
+  background: #E01E3A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 36, 66, 0.2);
+}
+
+/* 卡片容器样式 - 简化并移除多余的样式 */
+.cards-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  background: transparent; /* 移除背景色 */
+  padding: 0; /* 移除内边距 */
+  box-shadow: none; /* 移除阴影 */
+}
+
+/* 统一所有内容容器样式 */
+#singleCapturedNotesContainer, 
+#capturedLinksContainer, 
+#bloggerInfoContainer {
+  background: transparent; /* 确保背景透明 */
+  padding: 0; /* 移除内边距 */
+}
+
+/* 卡片样式 - 优化间距和阴影 */
+.card {
+  display: flex;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px; /* 增加内边距使内容不拥挤 */
+  margin-bottom: 10px; /* 增加卡片之间的间距 */
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 图片容器样式 - 确保比例一致并添加裁剪功能 */
+.image-container {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  margin-right: 10px; /* 增加与内容区域的间距 */
+  border-radius: 4px;
+}
+
+/* 确保图片按固定比例裁剪显示 */
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 卡片数字样式 - 确保一致性 */
+.card-number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 0 0 4px 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* 卡片内容样式 - 确保文字居左对齐 */
+.card-content {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+/* 增加卡片标题与其他内容的间距 */
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333333;
+  text-decoration: none;
+  line-height: 1.4;
+  margin-bottom: 6px; /* 增加与作者信息的间距 */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 增加作者信息与其他内容的间距 */
+.card-author {
+  font-size: 11px;
+  color: #666666;
+  margin-bottom: 4px; /* 增加与统计数据的间距 */
+}
+
+/* 增加点赞数与其他内容的间距 */
+.card-likes {
+  font-size: 11px;
+  color: #666666;
+}
+
+/* 互动数据容器样式 - 同一行显示 */
+.card-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px; /* 增加与作者信息的间距 */
+}
+
+.card-stats .stat-item {
+  font-size: 11px;
+  color: #666666;
+}
+
+/* 博主头像容器样式 - 4:3比例 (高4宽3) */
+.blogger-avatar-container {
+  width: 60px;  /* 宽度为3个单位 */
+  height: 80px; /* 高度为4个单位 */
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.blogger-avatar-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 确保所有Tab内容区域样式一致 */
+.capture-section,
+.section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 统一卡片容器样式 */
+.cards-container,
+.notes-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding: 5px; /* 减小内边距，从10px改为5px */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 统一所有按钮样式 */
+.btn,
+.capture-section button,
+#saveConfigBtn {
+  padding: 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.btn-primary,
+.capture-section button,
+#saveConfigBtn {
+  background: #FF2442;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled),
+.capture-section button:hover:not(:disabled),
+#saveConfigBtn:hover {
+  background: #E01E3A;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 36, 66, 0.2);
+}
+
+/* 统一结果按钮容器样式 */
+.results-button-container {
+  margin: 15px 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 删除按钮样式 - 白色字体、50%透明黑色背景、圆角小按钮、位于右下角 */
+.delete-button {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.5); /* 50%透明黑色背景 */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.delete-button:hover {
+  background: rgba(0, 0, 0, 0.7); /* 悬停时增加透明度 */
+  transform: scale(1.05);
+}
+
+/* 隐藏所有导出Excel按钮 */
+#exportSingleExcelBtn, #exportExcelBtn, #exportBloggerExcelBtn {
+  display: none !important;
+}
