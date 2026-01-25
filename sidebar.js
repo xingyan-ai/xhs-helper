@@ -1,6 +1,34 @@
 // 红薯助手 - 侧边栏交互逻辑
 // 负责：UI交互、数据管理、导出、飞书同步
 
+// ===== 日期格式化工具函数 =====
+/**
+ * 格式化日期为 YYYY/MM/DD HH:mm 格式
+ * @param {Date|string|number} dateInput - 日期输入
+ * @returns {string} 格式化后的日期字符串
+ */
+function formatDateTimeForFeishu(dateInput) {
+  let date;
+  
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (typeof dateInput === 'number') {
+    date = new Date(dateInput);
+  } else if (typeof dateInput === 'string') {
+    date = new Date(dateInput);
+  } else {
+    date = new Date();
+  }
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}/${month}/${day} ${hours}:${minutes}`;
+}
+
 // ===== 全局函数（供HTML onclick调用）=====
 // 必须在最前面声明，确保HTML可以访问
 window.backToHome = function() {
@@ -66,6 +94,63 @@ let singleNoteData = null; // 单篇笔记数据
 let batchNotesData = []; // 博主笔记列表数据
 let bloggerInfoData = null; // 博主信息数据
 let feishuConfig = {}; // 飞书配置
+
+// ===== Coze 工作流 ID（写死，不对用户暴露）=====
+// 说明：按你的要求，工作流 ID 不让用户配置，避免被滥用/泄露。
+const COZE_WORKFLOW_IDS = {
+  // 笔记详情（单篇笔记）
+  single: '7595132567972888622',
+  // 博主笔记概览（批量）
+  batch: '7598111225851117587',
+  // 博主信息
+  blogger: '7598081754460979235'
+};
+
+// ===== 订单管理表格链接（写死，三个工作流共用）=====
+// 说明：按你的要求，orderurl 是固定值，每个用户都一样，不在插件里暴露为可配置项
+const FIXED_ORDER_URL =
+  'https://jcn38dn09zj1.feishu.cn/base/PYGkbjHKnaCdycspkbncDNgsnVb?table=tblIvDgHhQ4kgESm&view=vewWigxuiw';
+
+// ===== 工具函数：把 Date 转成 YYYY/MM/DD =====
+function formatDateYmd(date) {
+  if (!(date instanceof Date) || isNaN(date.getTime())) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}/${m}/${d}`;
+}
+
+// ===== 工具函数：截断长文本（避免提示框太长）=====
+function truncateText(text, maxLen = 600) {
+  if (text == null) return '';
+  const s = String(text);
+  if (s.length <= maxLen) return s;
+  return s.slice(0, maxLen) + '…(已截断)';
+}
+
+// 把常见的“YYYY/MM/DD HH:mm(:ss)”解析为毫秒时间戳（按本地时区）
+// 说明：Coze/飞书日期时间字段最稳的是 Number(毫秒)。这里尽量在插件侧就给出毫秒，减少工作流解析差异。
+function parseYmdHmToTimestamp(input) {
+  if (!input) return null;
+  if (typeof input === 'number' && Number.isFinite(input)) return input;
+  if (typeof input !== 'string') return null;
+
+  // 有些字符串会带地点/多余文字（如“2025/12/20 湖南”），这里取前面的日期部分
+  const s = input.trim();
+  const match = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (!match) return null;
+
+  const y = Number(match[1]);
+  const mo = Number(match[2]);
+  const d = Number(match[3]);
+  const hh = match[4] ? Number(match[4]) : 0;
+  const mm = match[5] ? Number(match[5]) : 0;
+  const ss = match[6] ? Number(match[6]) : 0;
+
+  const dt = new Date(y, mo - 1, d, hh, mm, ss, 0);
+  const ts = dt.getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
 
 // ===== 初始化 =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -369,30 +454,40 @@ function renderSingleNote() {
   
   notesList.innerHTML = `
     <div class="note-item" data-url="${noteUrl}">
-      <input type="checkbox" class="note-checkbox" checked>
-      <div class="note-content clickable" title="点击打开笔记">
-        <div class="note-cover">
-          <div class="note-badge">1</div>
-          ${imageUrl ? `<img src="${imageUrl}" alt="封面">` : '<span style="font-size: 32px;">📷</span>'}
+      <div class="note-select">
+        <input type="checkbox" class="note-checkbox" checked>
+        <span class="note-index">1</span>
+      </div>
+      <div class="note-cover">
+        ${imageUrl ? `<img src="${imageUrl}" alt="封面">` : '<span class="no-cover">📷</span>'}
+      </div>
+      <div class="note-body">
+        <div class="note-title clickable" title="${singleNoteData.title || '无标题'}">${singleNoteData.title || '无标题'}</div>
+        <div class="note-meta-row">
+          <span class="note-author">${singleNoteData.author || '未知作者'}</span>
+          <span class="note-date">${singleNoteData.publishDate || '未知时间'}</span>
         </div>
-        <div class="note-info">
-          <div class="note-title">${singleNoteData.title || '无标题'}</div>
-          <div class="note-meta">${singleNoteData.author || '未知作者'} • ${singleNoteData.publishDate || '未知时间'}</div>
-          <div class="note-stats">
-            <span>👍 ${formatNumber(singleNoteData.likes || 0)}</span>
-            <span>⭐ ${formatNumber(singleNoteData.collects || 0)}</span>
-            <span>💬 ${formatNumber(singleNoteData.comments || 0)}</span>
-          </div>
+        <div class="note-stats-row">
+          <span class="note-stat">点赞 ${formatNumber(singleNoteData.likes || 0)}</span>
+          <span class="note-stat">收藏 ${formatNumber(singleNoteData.collects || 0)}</span>
+          <span class="note-stat">评论 ${formatNumber(singleNoteData.comments || 0)}</span>
         </div>
-        <div class="note-link-icon">
+      </div>
+      <div class="note-actions-col">
+        <button class="btn-icon-sm" data-url="${noteUrl}" title="查看">
           <span class="material-symbols-outlined">open_in_new</span>
-        </div>
+        </button>
+        <button class="btn-icon-sm btn-delete-icon" data-type="single" title="删除">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
       </div>
     </div>
   `;
   
-  // 绑定点击事件
-  bindNoteClickEvents(notesList);
+  // 绑定点击事件（复用批量笔记的标题点击逻辑）
+  bindBatchNoteClickEvents(notesList);
+  // 绑定单篇删除按钮事件
+  bindSingleDeleteButtons(notesList);
   
   // 绑定复选框事件
   bindCheckboxEvents(notesList, 'single');
@@ -423,7 +518,7 @@ function renderBatchNotes() {
         <div class="note-meta-row">
           <span class="note-author">${note.author || '未知作者'}</span>
           ${note.publishDateStr ? `<span class="note-date">${note.publishDateStr}</span>` : ''}
-          <span class="note-likes">👍 ${formatNumber(note.likes || 0)}</span>
+          <span class="note-likes">点赞数 ${formatNumber(note.likes || 0)}</span>
         </div>
       </div>
       <div class="note-actions-col">
@@ -612,8 +707,14 @@ function exportToExcel(type) {
         return;
       }
       
-      csvContent = '\ufeff标题,笔记链接,笔记类型,作者,正文,话题标签,封面链接,点赞数,收藏数,评论数,发布时间,采集时间\n';
+      csvContent = '\ufeff标题,笔记链接,笔记类型,作者,正文,话题标签,封面链接,全部图片链接,视频链接,点赞数,收藏数,评论数,发布时间,采集时间\n';
       selectedNotes.forEach(note => {
+        const imageUrls = note.imageUrls ? note.imageUrls.split(',').map(url => url.trim()).filter(Boolean) : [];
+        const coverLink = imageUrls.length > 0 ? imageUrls[0] : (note.coverImageUrl || '');
+        const formattedImageUrls = imageUrls
+          .map((url, index) => `图${index + 1}=(${url})`)
+          .join('\n');
+        const videoUrl = note.videoUrl || '';
         const row = [
           note.title || '无标题',
           note.url || '',
@@ -621,7 +722,9 @@ function exportToExcel(type) {
           note.author || '未知作者',
           note.content || '',
           note.tags || '',
-          note.coverImageUrl || '',
+          coverLink,
+          formattedImageUrls,
+          videoUrl,
           note.likes || 0,
           note.collects || 0,
           note.comments || 0,
@@ -639,15 +742,28 @@ function exportToExcel(type) {
         return;
       }
       
-      csvContent = '\ufeff序号,标题,链接,作者,点赞数,图片链接\n';
+      csvContent = '\ufeff序号,标题,笔记链接,博主,点赞数,封面链接,笔记发布时间预估,采集时间\n';
       selectedNotes.forEach((note, index) => {
+        let publishDateEstimated = '';
+        if (note.publishDate instanceof Date && !isNaN(note.publishDate.getTime())) {
+          publishDateEstimated = formatDateYmd(note.publishDate);
+        } else if (typeof note.publishDateStr === 'string' && note.publishDateStr.trim()) {
+          const parsed = new Date(note.publishDateStr.replace(/-/g, '/'));
+          publishDateEstimated = !isNaN(parsed.getTime()) ? formatDateYmd(parsed) : note.publishDateStr.trim();
+        } else if (typeof note.publishDate === 'string' && note.publishDate.trim()) {
+          const parsed = new Date(note.publishDate.replace(/-/g, '/'));
+          publishDateEstimated = !isNaN(parsed.getTime()) ? formatDateYmd(parsed) : note.publishDate.trim();
+        }
+        const captureTime = formatDateTimeForFeishu(new Date());
         const row = [
           index + 1,
           note.title || '无标题',
           note.url || '',
           note.author || '未知作者',
           note.likes || 0,
-          note.image || ''
+          note.image || '',
+          publishDateEstimated,
+          captureTime
         ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
         csvContent += row + '\n';
       });
@@ -722,47 +838,91 @@ async function syncToFeishu(type) {
     
     if (type === 'single') {
       // 单篇笔记同步
-      workflowId = feishuConfig.singleNoteWorkflowId || '';
+      workflowId = COZE_WORKFLOW_IDS.single;
       tableUrl = feishuConfig.knowledgeUrl;
       
-      records = selectedData.map(note => ({
-        fields: {
+      records = selectedData.map(note => {
+        // 处理图片附件：格式化为多行文本（图1=(url1)\n图2=(url2)）
+        let formattedImageUrls = '';
+        if (note.imageUrls) {
+          const imageArray = note.imageUrls.split(',');
+          formattedImageUrls = imageArray.map((url, index) => 
+            `图${index + 1}=(${url.trim()})`
+          ).join('\n');
+        }
+        
+        // 处理封面：取第一张图片
+        const coverUrl = note.imageUrls ? note.imageUrls.split(',')[0].trim() : (note.coverImageUrl || '');
+
+        // 采集时间：格式化为 YYYY/MM/DD HH:mm
+        const captureTime = formatDateTimeForFeishu(new Date());
+        
+        // 发布时间：尝试解析，如果失败则不传
+        let publishTime = null;
+        if (note.publishDate) {
+          try {
+            publishTime = formatDateTimeForFeishu(note.publishDate);
+          } catch (e) {
+            console.warn('发布时间格式化失败:', note.publishDate, e);
+          }
+        }
+
+        const fields = {
           "标题": note.title || '',
           "笔记链接": note.url || '',
           "笔记类型": note.noteType || '图文',
           "作者": note.author || '',
           "正文": note.content || '',
           "话题标签": note.tags || '',
-          "封面": note.coverImageUrl || '',
-          "图片附件": note.imageUrls || '',
+          "封面": coverUrl,
+          "图片附件": formattedImageUrls,
+          "视频链接": note.videoUrl || '',
           "点赞数": note.likes || 0,
           "收藏数": note.collects || 0,
           "评论数": note.comments || 0,
-          "发布时间": note.publishDate || '',
-          "采集时间": new Date().toLocaleString('zh-CN')
+          "采集时间": captureTime
+        };
+        if (publishTime !== null) {
+          fields["发布时间"] = publishTime;
         }
-      }));
+
+        return { fields };
+      });
       
     } else if (type === 'batch') {
       // 博主笔记批量同步
-      workflowId = feishuConfig.batchNotesWorkflowId || '';
+      workflowId = COZE_WORKFLOW_IDS.batch;
       tableUrl = feishuConfig.bloggerNoteUrl;
       
-      records = selectedData.map(note => ({
-        fields: {
-          "博主": note.author || '',
-          "标题": note.title || '',
-          "点赞数": note.likes || 0,
-          "笔记链接": note.url || '',
-          "封面链接": note.image || '',
-          "笔记发布时间预估": note.publishDate || '',
-          "采集时间": new Date().toLocaleString('zh-CN')
+      records = selectedData.map(note => {
+        // 批量的“笔记发布时间预估”只需要到“天”（YYYY/MM/DD）
+        let publishDateEstimated = '';
+        if (note.publishDate instanceof Date && !isNaN(note.publishDate.getTime())) {
+          publishDateEstimated = formatDateYmd(note.publishDate);
+        } else if (typeof note.publishDateStr === 'string' && note.publishDateStr.trim()) {
+          const parsed = new Date(note.publishDateStr.replace(/-/g, '/'));
+          publishDateEstimated = !isNaN(parsed.getTime()) ? formatDateYmd(parsed) : note.publishDateStr.trim();
+        } else if (typeof note.publishDate === 'string' && note.publishDate.trim()) {
+          const parsed = new Date(note.publishDate.replace(/-/g, '/'));
+          publishDateEstimated = !isNaN(parsed.getTime()) ? formatDateYmd(parsed) : note.publishDate.trim();
         }
-      }));
+
+        return {
+          fields: {
+            "博主": note.author || '',
+            "标题": note.title || '',
+            "点赞数": note.likes || 0,
+            "笔记链接": note.url || '',
+            "封面链接": note.image || '',
+            "笔记发布时间预估": publishDateEstimated,
+            "采集时间": formatDateTimeForFeishu(new Date())
+          }
+        };
+      });
       
     } else if (type === 'blogger') {
       // 博主信息同步
-      workflowId = feishuConfig.bloggerInfoWorkflowId || '';
+      workflowId = COZE_WORKFLOW_IDS.blogger;
       tableUrl = feishuConfig.bloggerUrl;
       
       records = selectedData.map(info => ({
@@ -773,15 +933,15 @@ async function syncToFeishu(type) {
           "简介": info.description || '',
           "粉丝数": info.followersCount || 0,
           "主页链接": info.bloggerUrl || '',
+          // 按你的《Body格式汇总》：插件原始 body 里时间可以传 String（推荐在工作流里转毫秒）
           "采集时间": new Date().toLocaleString('zh-CN')
         }
       }));
     }
     
-    // 检查工作流ID
+    // 工作流ID写死，理论上不会为空；这里保留兜底提示，方便排查版本问题
     if (!workflowId) {
-      showAlert('error', '配置缺失', '请在设置中配置工作流ID');
-      toggleSettings();
+      showAlert('error', '内部配置缺失', '工作流ID未配置，请更新插件版本');
       return;
     }
     
@@ -812,39 +972,109 @@ async function syncToFeishu(type) {
       body: JSON.stringify({
         workflow_id: workflowId,
         parameters: {
-          orderId: feishuConfig.orderId,
-          baseToken: feishuConfig.baseToken,
-          tableUrl: tableUrl,
-          body: body
+          // 严格按开始节点必填参数名，传 5 个字段：
+          // orderId / baseToken / tableurl / body / orderurl
+          // 注意：虽然工作流使用 tableurl 提取 app_token，但开始节点可能要求 baseToken 必填
+          // 如果不需要，请在 Coze 开始节点中将 baseToken 改为非必填
+          orderId: String(feishuConfig.orderId || '').trim(),
+          baseToken: String(feishuConfig.baseToken || '').trim(),  // 传入但不使用
+          tableurl: String(tableUrl || '').replace(/`/g, '').trim(),
+          body: body,
+          orderurl: String(FIXED_ORDER_URL || '').trim()
         }
       })
     });
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // 为了把失败原因“回显”出来：这里不直接 response.json()，先读文本，再尝试解析
+    const rawText = await response.text();
+    let result = null;
+    try {
+      result = rawText ? JSON.parse(rawText) : null;
+    } catch (e) {
+      // JSON 解析失败也要回显（常见于 502/网关返回 HTML）
+      const msg = `HTTP ${response.status} ${response.statusText}\n响应非JSON：\n${truncateText(rawText, 800)}`;
+      showAlert('error', '同步失败', msg);
+      return;
     }
     
-    const result = await response.json();
     console.log('Coze API 响应:', result);
+
+    // HTTP 非 2xx：尽量展示 Coze 的 msg/code
+    if (!response.ok) {
+      const msg = [
+        `HTTP ${response.status} ${response.statusText}`,
+        result?.msg ? `Coze msg: ${result.msg}` : '',
+        typeof result?.code !== 'undefined' ? `Coze code: ${result.code}` : '',
+        result?.log_id ? `log_id: ${result.log_id}` : ''
+      ].filter(Boolean).join('\n');
+      showAlert('error', '同步失败', msg || `HTTP ${response.status} ${response.statusText}`);
+      return;
+    }
     
-    // 解析结果
-    if (result.code === 0 && result.data) {
-      const data = JSON.parse(result.data);
-      
-      if (data.orderId_result === false) {
-        showAlert('error', '订单号无效', '订单号不存在或已过期，请联系管理员');
-      } else if (data.add_result === true) {
-        showAlert('success', '同步成功', `已成功将 ${selectedData.length} 条数据同步到飞书多维表格`);
-      } else {
-        showAlert('error', '同步失败', data.message || '数据写入失败，请检查飞书配置');
-      }
+    // Coze code 非 0：直接回显 code/msg/log_id
+    if (!result || result.code !== 0) {
+      const msg = [
+        typeof result?.code !== 'undefined' ? `Coze code: ${result.code}` : 'Coze code: (空)',
+        result?.msg ? `Coze msg: ${result.msg}` : 'Coze msg: (空)',
+        result?.log_id ? `log_id: ${result.log_id}` : ''
+      ].filter(Boolean).join('\n');
+      showAlert('error', '同步失败', msg);
+      return;
+    }
+    
+    // Coze code=0 但 data 为空/不是 JSON 字符串：也回显
+    if (!result.data) {
+      const msg = `Coze 返回成功但 data 为空。\nlog_id: ${result.log_id || '(空)'}\n原始响应：\n${truncateText(rawText, 800)}`;
+      showAlert('error', '同步失败', msg);
+      return;
+    }
+    
+    // 解析工作流输出（Coze 的 result.data 通常是 JSON 字符串）
+    let wf = null;
+    try {
+      wf = JSON.parse(result.data);
+    } catch (e) {
+      const msg = `工作流输出 data 不是合法 JSON：${e.message}\nlog_id: ${result.log_id || '(空)'}\nresult.data：\n${truncateText(result.data, 800)}`;
+      showAlert('error', '同步失败', msg);
+      return;
+    }
+    
+    // 业务结果回显（兼容新的“三个输出变量”逻辑）
+    const hasValue = (val) => {
+      if (val === null || typeof val === 'undefined') return false;
+      if (typeof val === 'string') return val.trim().length > 0;
+      if (Array.isArray(val)) return val.length > 0;
+      if (typeof val === 'object') return Object.keys(val).length > 0;
+      return true;
+    };
+
+    const orderValid = hasValue(wf.orderId_result);
+    const recordsOk = hasValue(wf.records);
+    const editOk = hasValue(wf.edit_records);
+    const addOk = hasValue(wf.add_records);
+    const writeOk = recordsOk || editOk || addOk;
+
+    if (!orderValid) {
+      const msg = `订单号无效/已过期。\nlog_id: ${result.log_id || '(空)'}\n${wf.message ? `message: ${wf.message}` : ''}`.trim();
+      showAlert('error', '订单号无效', msg);
+    } else if (writeOk) {
+      const actionText = recordsOk ? '写入成功' : (editOk ? '已存在，已更新' : '新增成功');
+      showAlert('success', '同步成功', `${actionText}，共处理 ${selectedData.length} 条数据`);
     } else {
-      showAlert('error', '同步失败', result.msg || '未知错误');
+      const msg = [
+        '订单号有效，但写入结果为空',
+        wf.message ? `message: ${wf.message}` : '',
+        `log_id: ${result.log_id || '(空)'}`,
+        '工作流返回内容:',
+        truncateText(JSON.stringify(wf, null, 2), 500)
+      ].filter(Boolean).join('\n');
+      showAlert('error', '同步失败', msg || '数据写入失败，请检查飞书配置');
     }
     
   } catch (error) {
     console.error('同步错误:', error);
-    showAlert('error', '同步失败', `网络请求失败: ${error.message}`);
+    // 这里把真实错误 message 回显出来，避免只看到“未知错误”
+    showAlert('error', '同步失败', `网络/运行时错误: ${error?.message || String(error)}`);
   }
 }
 
@@ -860,9 +1090,6 @@ function loadConfiguration() {
       document.getElementById('knowledgeUrl').value = feishuConfig.knowledgeUrl || '';
       document.getElementById('bloggerNoteUrl').value = feishuConfig.bloggerNoteUrl || '';
       document.getElementById('bloggerUrl').value = feishuConfig.bloggerUrl || '';
-      document.getElementById('singleNoteWorkflowId').value = feishuConfig.singleNoteWorkflowId || '';
-      document.getElementById('batchNotesWorkflowId').value = feishuConfig.batchNotesWorkflowId || '';
-      document.getElementById('bloggerInfoWorkflowId').value = feishuConfig.bloggerInfoWorkflowId || '';
     }
   });
 }
@@ -874,10 +1101,7 @@ function saveConfiguration() {
     cozeToken: document.getElementById('cozeToken').value.trim(),
     knowledgeUrl: document.getElementById('knowledgeUrl').value.trim(),
     bloggerNoteUrl: document.getElementById('bloggerNoteUrl').value.trim(),
-    bloggerUrl: document.getElementById('bloggerUrl').value.trim(),
-    singleNoteWorkflowId: document.getElementById('singleNoteWorkflowId').value.trim(),
-    batchNotesWorkflowId: document.getElementById('batchNotesWorkflowId').value.trim(),
-    bloggerInfoWorkflowId: document.getElementById('bloggerInfoWorkflowId').value.trim()
+    bloggerUrl: document.getElementById('bloggerUrl').value.trim()
   };
   
   chrome.storage.local.set({ feishuConfig }, () => {
@@ -911,6 +1135,14 @@ function showAlert(type, title, message) {
     return;
   }
   
+  // 关键：如果之前是 success/info 产生的自动清空定时器，必须先清掉
+  // 否则会出现：先显示“正在同步”(info)，3秒后定时器把后续的 error 也清掉 → 看起来像“报错太快消失”
+  if (!window.__alertTimers) window.__alertTimers = {};
+  if (window.__alertTimers[containerId]) {
+    clearTimeout(window.__alertTimers[containerId]);
+    delete window.__alertTimers[containerId];
+  }
+
   const iconMap = {
     success: 'check_circle',
     error: 'error',
@@ -928,11 +1160,14 @@ function showAlert(type, title, message) {
     </div>
   `;
   
-  // 成功和信息提示3秒后自动消失
+  // 成功和信息提示自动消失（延长时间，方便看清）
   if (type === 'success' || type === 'info') {
-    setTimeout(() => {
+    const ttl = type === 'success' ? 6000 : 8000; // success 6s, info 8s
+    window.__alertTimers[containerId] = setTimeout(() => {
+      // 只清空当前容器内容（如果期间又出现新的提示，会先清理定时器）
       container.innerHTML = '';
-    }, 3000);
+      delete window.__alertTimers[containerId];
+    }, ttl);
   }
 }
 
@@ -1017,6 +1252,10 @@ function bindDeleteButtons(container) {
   deleteButtons.forEach(btn => {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
+      if (this.dataset.type === 'single') {
+        deleteSelected('single');
+        return;
+      }
       const index = parseInt(this.dataset.index);
       console.log('删除按钮点击, index:', index);
       
@@ -1041,6 +1280,17 @@ function bindDeleteButtons(container) {
   });
 }
 
+// 绑定单篇删除按钮事件（使用统一删除逻辑）
+function bindSingleDeleteButtons(container) {
+  const deleteButtons = container.querySelectorAll('.btn-delete-icon[data-type="single"]');
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      deleteSelected('single');
+    });
+  });
+}
+
 // 绑定复选框事件
 function bindCheckboxEvents(container, type) {
   const checkboxes = container.querySelectorAll('.note-checkbox');
@@ -1052,5 +1302,10 @@ function bindCheckboxEvents(container, type) {
 }
 
 function showHelp() {
-  alert('红薯助手使用说明：\n\n1. 选择功能（单篇笔记/博主笔记/博主信息）\n2. 打开对应的小红书页面\n3. 点击"开始采集"\n4. 采集成功后可以导出Excel或同步到飞书\n\n需要更多帮助？请访问项目文档。');
+  const helpUrl = 'https://jcn38dn09zj1.feishu.cn/wiki/G54IwhSEaiM0lgk8uzRcwpD8nAh';
+  if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+    chrome.tabs.create({ url: helpUrl });
+  } else {
+    window.open(helpUrl, '_blank');
+  }
 }

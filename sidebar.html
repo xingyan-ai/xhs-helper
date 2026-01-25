@@ -165,12 +165,9 @@
               </label>
             </div>
             <div class="date-range" id="dateRangeContainer" style="display: none;">
-              <div class="date-field">
-                <label>从</label>
+              <div class="date-field date-field-inline">
                 <input type="date" id="batchDateStart" class="date-input">
-              </div>
-              <div class="date-field">
-                <label>到</label>
+                <span class="date-separator">至</span>
                 <input type="date" id="batchDateEnd" class="date-input">
               </div>
             </div>
@@ -318,26 +315,6 @@
         <label class="form-label">「小红书博主库」表格链接</label>
         <input type="text" class="form-input" id="bloggerUrl" placeholder="请输入表格链接">
         <div class="help-text">用于存储博主基础信息</div>
-      </div>
-      
-      <div class="divider"></div>
-      
-      <div class="form-field">
-        <label class="form-label">单篇笔记工作流 ID</label>
-        <input type="text" class="form-input" id="singleNoteWorkflowId" placeholder="请输入工作流 ID">
-        <div class="help-text">Coze 工作流 ID（单篇笔记同步）</div>
-      </div>
-      
-      <div class="form-field">
-        <label class="form-label">博主笔记工作流 ID</label>
-        <input type="text" class="form-input" id="batchNotesWorkflowId" placeholder="请输入工作流 ID">
-        <div class="help-text">Coze 工作流 ID（博主笔记批量同步）</div>
-      </div>
-      
-      <div class="form-field">
-        <label class="form-label">博主信息工作流 ID</label>
-        <input type="text" class="form-input" id="bloggerInfoWorkflowId" placeholder="请输入工作流 ID">
-        <div class="help-text">Coze 工作流 ID（博主信息同步）</div>
       </div>
       
       <button class="btn btn-primary btn-full" id="saveConfigBtn">
