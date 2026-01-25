@@ -369,21 +369,129 @@ async function captureSingleNote() {
     }
   }
   
-  // 图片
-  const images = Array.from(document.querySelectorAll('img[src*="xhscdn.com"]'))
-    .map(img => img.src)
-    .filter(src => !src.includes('avatar'));
-  data.imageUrls = images.join(',');
-  data.coverImageUrl = images[0] || '';
+  // 图片（优化逻辑：优先取轮播图并过滤 duplicate）
+  let imageUrls = [];
+  const seenImageUrls = new Set();
+
+  // 视频相关判断（优化逻辑）
+  const hasRealVideoPlayer = document.querySelector('.xgplayer, .video-player, [data-spm="video"]') !== null;
+  const hasLivePhoto = document.querySelector('.live-photo-contain') !== null;
+  const hasVideoMediaType = document.querySelector('video[mediatype="video"]') !== null;
+  const isVideoNote = (hasRealVideoPlayer || hasVideoMediaType) && !hasLivePhoto;
+
+  // 视频封面（优先从 xg-poster 获取）
+  if (isVideoNote) {
+    const poster = document.querySelector('xg-poster');
+    if (poster) {
+      const style = poster.getAttribute('style');
+      const match = style && style.match(/url\(\"([^\"]+)\"\)/);
+      if (match && match[1]) {
+        const posterUrl = match[1].replace(/^http:/, 'https:');
+        if (!seenImageUrls.has(posterUrl)) {
+          seenImageUrls.add(posterUrl);
+          imageUrls.push(posterUrl);
+        }
+      }
+    }
+    // 兜底：尝试 video 的 poster 属性
+    if (imageUrls.length === 0) {
+      const videoEl = document.querySelector('video');
+      const posterUrl = videoEl?.getAttribute('poster');
+      if (posterUrl) {
+        const fixedUrl = posterUrl.startsWith('http') ? posterUrl : `https:${posterUrl}`;
+        if (!seenImageUrls.has(fixedUrl)) {
+          seenImageUrls.add(fixedUrl);
+          imageUrls.push(fixedUrl);
+        }
+      }
+    }
+  }
+
+  // 1) 轮播图：排除 duplicate，避免多出重复图片（视频笔记不走轮播）
+  const slideElements = isVideoNote ? [] : document.querySelectorAll('.swiper-slide:not(.swiper-slide-duplicate)');
+  if (slideElements.length > 0) {
+    slideElements.forEach((slide) => {
+      const img = slide.querySelector('img');
+      if (!img) return;
+      let imgUrl = img.getAttribute('data-src') || img.getAttribute('src') || '';
+      if (!imgUrl) return;
+
+      // 过滤头像/占位图
+      if (imgUrl.includes('avatar') || imgUrl.includes('head') || imgUrl.includes('profile')) return;
+      if (imgUrl.includes('placeholder') || imgUrl.includes('blank') || imgUrl.includes('spacer')) return;
+
+      // 补齐 https
+      if (!imgUrl.startsWith('http')) {
+        if (imgUrl.startsWith('//')) {
+          imgUrl = 'https:' + imgUrl;
+        } else if (imgUrl.startsWith('/')) {
+          imgUrl = 'https://www.xiaohongshu.com' + imgUrl;
+        } else {
+          imgUrl = 'https:' + imgUrl;
+        }
+      }
+
+      if (!seenImageUrls.has(imgUrl)) {
+        seenImageUrls.add(imgUrl);
+        imageUrls.push(imgUrl);
+      }
+    });
+  }
+
+  // 2) 兜底：如果没拿到轮播图/封面，再扫页面图片（去重/过滤）
+  if (imageUrls.length === 0) {
+    const images = Array.from(document.querySelectorAll('img[src*="xhscdn.com"]'));
+    images.forEach((img) => {
+      let imgUrl = img.getAttribute('data-src') || img.getAttribute('src') || '';
+      if (!imgUrl) return;
+      if (imgUrl.includes('avatar') || imgUrl.includes('head') || imgUrl.includes('profile')) return;
+      if (imgUrl.includes('placeholder') || imgUrl.includes('blank') || imgUrl.includes('spacer')) return;
+
+      if (!imgUrl.startsWith('http')) {
+        if (imgUrl.startsWith('//')) {
+          imgUrl = 'https:' + imgUrl;
+        } else if (imgUrl.startsWith('/')) {
+          imgUrl = 'https://www.xiaohongshu.com' + imgUrl;
+        } else {
+          imgUrl = 'https:' + imgUrl;
+        }
+      }
+
+      if (!seenImageUrls.has(imgUrl)) {
+        seenImageUrls.add(imgUrl);
+        imageUrls.push(imgUrl);
+      }
+    });
+  }
+
+  data.imageUrls = imageUrls.join(',');
+  data.coverImageUrl = imageUrls[0] || '';
   
   // 判断类型（视频/图文）
-  const hasVideo = document.querySelector('video') !== null;
-  data.noteType = hasVideo ? '视频' : '图文';
+  data.noteType = isVideoNote ? '视频' : '图文';
   
-  if (hasVideo) {
-    const video = document.querySelector('video');
-    if (video && video.src) {
-      data.videoUrl = video.src;
+  // 视频链接提取（优化逻辑，优先 currentSrc/src/source）
+  if (isVideoNote) {
+    let videoUrl = '';
+    const videoEl = document.querySelector('video');
+    if (videoEl) {
+      videoUrl = videoEl.currentSrc || videoEl.src || '';
+    }
+    if (!videoUrl) {
+      const sourceEl = document.querySelector('.video-container source, .video-player source, video source');
+      if (sourceEl) {
+        videoUrl = sourceEl.getAttribute('src') || '';
+      }
+    }
+    if (!videoUrl && performance && performance.getEntriesByType) {
+      const entries = performance.getEntriesByType('resource')
+        .filter(entry => typeof entry.name === 'string' && /\.(mp4|m3u8|webm|mov|avi)(\?|$)/i.test(entry.name));
+      if (entries.length > 0) {
+        videoUrl = entries[0].name;
+      }
+    }
+    if (videoUrl) {
+      data.videoUrl = videoUrl.replace(/^http:/, 'https:');
     }
   }
   

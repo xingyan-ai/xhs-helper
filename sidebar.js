@@ -451,6 +451,9 @@ function renderSingleNote() {
   
   const imageUrl = singleNoteData.coverImageUrl || singleNoteData.imageUrls?.split(',')[0] || '';
   const noteUrl = singleNoteData.url || '';
+  const safeDate = (singleNoteData.publishDate && !/NaN|undefined/i.test(singleNoteData.publishDate))
+    ? singleNoteData.publishDate
+    : '';
   
   notesList.innerHTML = `
     <div class="note-item" data-url="${noteUrl}">
@@ -465,7 +468,7 @@ function renderSingleNote() {
         <div class="note-title clickable" title="${singleNoteData.title || '无标题'}">${singleNoteData.title || '无标题'}</div>
         <div class="note-meta-row">
           <span class="note-author">${singleNoteData.author || '未知作者'}</span>
-          <span class="note-date">${singleNoteData.publishDate || '未知时间'}</span>
+          ${safeDate ? `<span class="note-date">${safeDate}</span>` : ''}
         </div>
         <div class="note-stats-row">
           <span class="note-stat">点赞 ${formatNumber(singleNoteData.likes || 0)}</span>
