@@ -714,9 +714,10 @@ function exportToExcel(type) {
       selectedNotes.forEach(note => {
         const imageUrls = note.imageUrls ? note.imageUrls.split(',').map(url => url.trim()).filter(Boolean) : [];
         const coverLink = imageUrls.length > 0 ? imageUrls[0] : (note.coverImageUrl || '');
-        const formattedImageUrls = imageUrls
-          .map((url, index) => `图${index + 1}=(${url})`)
-          .join('\n');
+        const isVideoNote = note.noteType === '视频' || Boolean(note.videoUrl);
+        const formattedImageUrls = isVideoNote
+          ? ''
+          : imageUrls.map((url, index) => `图${index + 1}=(${url})`).join('\n');
         const videoUrl = note.videoUrl || '';
         const row = [
           note.title || '无标题',
@@ -852,6 +853,10 @@ async function syncToFeishu(type) {
           formattedImageUrls = imageArray.map((url, index) => 
             `图${index + 1}=(${url.trim()})`
           ).join('\n');
+        }
+        const isVideoNote = note.noteType === '视频' || Boolean(note.videoUrl);
+        if (isVideoNote) {
+          formattedImageUrls = '';
         }
         
         // 处理封面：取第一张图片
